@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Registration Form</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+
+        :root {
+            --ink: #1a1f2e;
+            --ink-light: #4a5568;
+            --accent: #2563eb;
+            --accent-soft: #eff6ff;
+            --border: #e2e8f0;
+            --surface: #ffffff;
+            --bg: #f7f8fc;
+            --success: #059669;
+            --danger: #dc2626;
+            --section-head: #1e3a5f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            padding: 32px 16px 60px;
+        }
+
+        #form-container {
+            max-width: 920px;
+            margin: 0 auto;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 4px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: var(--section-head);
+            padding: 36px 40px;
+            text-align: center;
+        }
+        .form-header h1 {
+            font-family: 'DM Serif Display', serif;
+            color: #fff;
+            font-size: 1.9rem;
+            letter-spacing: 0.5px;
+        }
+        .form-header p {
+            color: #93c5fd;
+            font-size: 0.88rem;
+            margin-top: 6px;
+        }
+
+        .form-body { padding: 36px 40px; }
+
+        .form-section {
+            margin-bottom: 36px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .section-title {
+            background: var(--section-head);
+            color: #fff;
+            padding: 12px 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .section-body { padding: 24px; }
+
+        .grid-2, .grid-3 {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .grid-2 { grid-template-columns: 1fr 1fr; }
+        .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+        .field { margin-bottom: 16px; }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--ink-light);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        label.req::after { content: " *"; color: var(--danger); }
+
+        input[type="text"], input[type="email"], input[type="url"],
+        input[type="date"], select, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.92rem;
+            color: var(--ink);
+            background: var(--surface);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        textarea { min-height: 80px; resize: vertical; }
+
+        /* ── Document Upload Section ── */
+        .doc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .doc-card {
+            border: 1.5px dashed var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            transition: border-color 0.2s, background 0.2s;
+            position: relative;
+        }
+        .doc-card.has-file {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+        .doc-card.has-file .doc-status { color: var(--success); }
+
+        .doc-label {
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--ink);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .doc-label svg { flex-shrink: 0; }
+
+        .doc-status {
+            font-size: 0.75rem;
+            color: var(--ink-light);
+            margin-bottom: 8px;
+            min-height: 18px;
+        }
+
+        .doc-preview {
+            display: none;
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+        }
+        .doc-preview.show { display: block; }
+
+        .pdf-thumb {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #fee2e2;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            color: #7f1d1d;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .pdf-thumb.show { display: flex; }
+
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .upload-btn {
+            width: 100%;
+            padding: 8px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            border: 1.5px solid #bfdbfe;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .upload-btn:hover { background: #dbeafe; }
+        .upload-btn-wrapper input[type="file"] {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px; right: 10px;
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: none;
+        }
+        .doc-card.has-file .remove-btn { display: block; }
+
+        /* ── Same as checkbox ── */
+        .same-as-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--accent-soft);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .same-as-row input[type="checkbox"] { width: auto; accent-color: var(--accent); }
+        .same-as-row span { font-size: 0.88rem; font-weight: 500; color: var(--accent); }
+
+        /* ── Buttons ── */
+        .form-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 13px 28px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+        .btn-reset { background: #f1f5f9; color: var(--ink-light); }
+        .btn-save  { background: #64748b; color: #fff; }
+        .btn-pdf   { background: var(--accent); color: #fff; }
+
+        /* ── Progress Toast ── */
+        #toast {
+            position: fixed;
+            bottom: 30px; right: 30px;
+            background: var(--ink);
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 9999;
+            align-items: center;
+            gap: 10px;
+        }
+        #toast.show { display: flex; }
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 640px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .doc-grid { grid-template-columns: 1fr; }
+            .form-body { padding: 20px; }
+        }
+
+        @media print {
+            .form-buttons { display: none; }
+            body { background: #fff; padding: 0; }
+            #form-container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="form-container">
+    <div class="form-header">
+        <h1>Customer Registration Form</h1>
+        <p>Please fill in all required fields marked with *</p>
+    </div>
+
+    <div class="form-body">
+    <form id="customerForm" novalidate>
+
+        <!-- ── General Details ── -->
+        <div class="form-section">
+            <div class="section-title">01 — General Details</div>
+            <div class="section-body">
+                <div class="field">
+                    <label class="req">Name of Company / Entity</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="field">
+                    <label class="req">Address (Head Office)</label>
+                    <textarea name="address" required></textarea>
+                </div>
+                <div class="grid-3">
+                    <div><label class="req">City</label><input type="text" name="city" required></div>
+                    <div><label class="req">Pincode</label><input type="text" name="pincode" maxlength="6" pattern="\d{6}" required></div>
+                    <div><label class="req">State</label><input type="text" name="state" required></div>
+                </div>
+                <div class="grid-3">
+                    <div><label class="req">Country</label><input type="text" name="country" required></div>
+                    <div><label>Phone No. 1</label><input type="text" name="phone1"></div>
+                    <div><label>Phone No. 2</label><input type="text" name="phone2"></div>
+                </div>
+                <div class="grid-3">
+                    <div><label class="req">Contact Person</label><input type="text" name="contactPerson" required></div>
+                    <div><label class="req">Designation</label><input type="text" name="designation" required></div>
+                    <div><label class="req">Mobile No.</label><input type="text" name="mobile" required></div>
+                </div>
+                <div class="grid-3">
+                    <div><label>Email</label><input type="email" name="email"></div>
+                    <div><label>Website</label><input type="url" name="website"></div>
+                    <div><label>UDYAM Registration No.</label><input type="text" name="msmeNo"></div>
+                </div>
+                <div class="grid-2">
+                    <div>
+                        <label>MSME Enterprise Category</label>
+                        <select name="enterprisedCategory">
+                            <option value="">-- Select --</option>
+                            <option>Micro Enterprise</option>
+                            <option>Small Enterprise</option>
+                            <option>Medium Enterprise</option>
+                        </select>
+                    </div>
+                    <div><label>TAN No.</label><input type="text" name="tanNo"></div>
+                </div>
+                <div class="grid-2">
+                    <div>
+                        <label class="req">Company Type</label>
+                        <select name="companyType" required>
+                            <option value="">-- Select --</option>
+                            <option>Private Company</option>
+                            <option>Public Company</option>
+                            <option>LLP</option>
+                            <option>Proprietorship</option>
+                            <option>Public Sector Undertakings</option>
+                            <option>Govt.</option>
+                            <option>Others</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="req">Business Type</label>
+                        <select name="businessType" required>
+                            <option value="">-- Select --</option>
+                            <option>Traders</option>
+                            <option>Manufacturer</option>
+                            <option>Dealer</option>
+                            <option>Service Provider</option>
+                            <option>Contractor</option>
+                            <option>Others</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid-3">
+                    <div><label class="req">PAN No.</label><input type="text" name="panNo" required></div>
+                    <div><label>PAN Name</label><input type="text" name="panName"></div>
+                    <div><label>GST No.</label><input type="text" name="gstNo"></div>
+                </div>
+                <div class="grid-2">
+                    <div><label>CIN No.</label><input type="text" name="cinNo"></div>
+                    <div><label>LLP No.</label><input type="text" name="llpNo"></div>
+                </div>
+                <div class="field">
+                    <label>Reference</label>
+                    <input type="text" name="reference">
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Billing Details ── -->
+        <div class="form-section">
+            <div class="section-title">02 — Billing Details</div>
+            <div class="section-body">
+                <label class="same-as-row" for="copyGeneralToBilling">
+                    <input type="checkbox" id="copyGeneralToBilling">
+                    <span>✓ Same as General Details</span>
+                </label>
+                <div class="field"><label class="req">Name</label><input type="text" name="billingName" required></div>
+                <div class="field"><label class="req">Address</label><textarea name="billingAddress" required></textarea></div>
+                <div class="grid-3">
+                    <div><label class="req">City</label><input type="text" name="billingCity" required></div>
+                    <div><label class="req">Pincode</label><input type="text" name="billingPincode" maxlength="6" pattern="\d{6}" required></div>
+                    <div><label class="req">State</label><input type="text" name="billingState" required></div>
+                </div>
+            </div>
+        </div>
+ <!-- ── Shipping Details ── -->
+        <div class="form-section">
+            <div class="section-title">03 — Shipping Details</div>
+            <div class="section-body">
+                <label class="same-as-row" for="copyGeneralToShipping">
+                    <input type="checkbox" id="copyGeneralToShipping">
+                    <span>✓ Same as General Details</span>
+                </label>
+                <div class="field"><label class="req">Name</label><input type="text" name="shippingName" required></div>
+                <div class="field"><label class="req">Address</label><textarea name="shippingAddress" required></textarea></div>
+                <div class="grid-3">
+                    <div><label class="req">City</label><input type="text" name="shippingCity" required></div>
+                    <div><label class="req">Pincode</label><input type="text" name="shippingPincode" maxlength="6" pattern="\d{6}" required></div>
+                    <div><label class="req">State</label><input type="text" name="shippingState" required></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Documents ── -->
+        <div class="form-section">
+            <div class="section-title">04 — Documents to be Submitted</div>
+            <div class="section-body">
+                <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:18px;">
+                    Upload PDF or JPEG files. Uploaded documents will be automatically appended to the generated PDF.
+                </p>
+                <div class="doc-grid">
+                    <!-- PAN Card -->
+                    <div class="doc-card" id="card-pan">
+                        <button type="button" class="remove-btn" onclick="removeDoc('pan')" title="Remove">✕</button>
+                        <div class="doc-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                            PAN Card
+                        </div>
+                        <div class="doc-status" id="status-pan">No file chosen</div>
+                        <img class="doc-preview" id="preview-pan" alt="PAN preview">
+                        <div class="pdf-thumb" id="pdf-pan">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg>
+                            PDF Document attached
+                        </div>
+                        <div class="upload-btn-wrapper">
+                            <div class="upload-btn">📎 Choose File (PDF / JPEG)</div>
+                            <input type="file" id="filePan" accept=".pdf,.jpg,.jpeg" onchange="handleFile(this,'pan')">
+                        </div>
+                    </div>
+
+                    <!-- GST Certificate -->
+                    <div class="doc-card" id="card-gst">
+                        <button type="button" class="remove-btn" onclick="removeDoc('gst')" title="Remove">✕</button>
+                        <div class="doc-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                            GST Certificate
+                        </div>
+                        <div class="doc-status" id="status-gst">No file chosen</div>
+                        <img class="doc-preview" id="preview-gst" alt="GST preview">
+                        <div class="pdf-thumb" id="pdf-gst">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg>
+                            PDF Document attached
+                        </div>
+                        <div class="upload-btn-wrapper">
+                            <div class="upload-btn">📎 Choose File (PDF / JPEG)</div>
+                            <input type="file" id="fileGst" accept=".pdf,.jpg,.jpeg" onchange="handleFile(this,'gst')">
+                        </div>
+                    </div>
+
+                    <!-- Certificate of Incorporation -->
+                    <div class="doc-card" id="card-incorp">
+                        <button type="button" class="remove-btn" onclick="removeDoc('incorp')" title="Remove">✕</button>
+                        <div class="doc-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+                            Certificate of Incorporation
+                        </div>
+                        <div class="doc-status" id="status-incorp">No file chosen</div>
+                        <img class="doc-preview" id="preview-incorp" alt="Incorporation preview">
+                        <div class="pdf-thumb" id="pdf-incorp">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg>
+                            PDF Document attached
+                        </div>
+                        <div class="upload-btn-wrapper">
+                            <div class="upload-btn">📎 Choose File (PDF / JPEG)</div>
+                            <input type="file" id="fileIncorp" accept=".pdf,.jpg,.jpeg" onchange="handleFile(this,'incorp')">
+                        </div>
+                    </div>
+
+                    <!-- UDYAM Certificate -->
+                    <div class="doc-card" id="card-msme">
+                        <button type="button" class="remove-btn" onclick="removeDoc('msme')" title="Remove">✕</button>
+                        <div class="doc-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                            UDYAM Certificate
+                        </div>
+                        <div class="doc-status" id="status-msme">No file chosen</div>
+                        <img class="doc-preview" id="preview-msme" alt="UDYAM preview">
+                        <div class="pdf-thumb" id="pdf-msme">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg>
+                            PDF Document attached
+                        </div>
+                        <div class="upload-btn-wrapper">
+                            <div class="upload-btn">📎 Choose File (PDF / JPEG)</div>
+                            <input type="file" id="fileMsme" accept=".pdf,.jpg,.jpeg" onchange="handleFile(this,'msme')">
+                        </div>
+                    </div>
+<!-- Cancelled Cheque -->
+                    <div class="doc-card" id="card-Cheque">
+                        <button type="button" class="remove-btn" onclick="removeDoc('Cheue')" title="Remove">✕</button>
+                        <div class="doc-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                            Cancelled Cheque
+                        </div>
+                        <div class="doc-status" id="status-Cheque">No file chosen</div>
+                        <img class="doc-preview" id="preview-Cheque" alt="Cancelled Cheque">
+                        <div class="pdf-thumb" id="pdf-Cheque">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg>
+                            PDF Document attached
+                        </div>
+                        <div class="upload-btn-wrapper">
+                            <div class="upload-btn">📎 Choose File (PDF / JPEG)</div>
+                            <input type="file" id="fileMsme" accept=".pdf,.jpg,.jpeg" onchange="handleFile(this,'Cheque')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Declaration ── -->
+        <div class="form-section">
+            <div class="section-title">05 — Declaration</div>
+            <div class="section-body">
+                <p style="font-size:0.85rem;line-height:1.7;color:var(--ink-light);margin-bottom:20px;padding:14px;background:#f8faff;border-left:3px solid var(--accent);border-radius:4px;">
+                    We hereby declare that the information furnished is true to the best of our knowledge.
+                    We agree that rendering false information shall debar us for enlistment in future.
+                </p>
+                <div class="grid-3">
+                    <div><label>Place</label><input type="text" name="place"></div>
+                    <div><label>Date</label><input type="date" name="date"></div>
+                    <div><label>Authorised Signatory</label><input type="text" name="authorisedName"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Buttons ── -->
+        <div class="form-buttons" id="formButtons">
+            <button type="reset" class="btn btn-reset">↺ Reset Form</button>
+            <button type="button" class="btn btn-save" id="saveBtn">💾 Save Draft</button>
+            <button type="button" class="btn btn-pdf" id="submitPrintBtn">⬇ Submit & Generate PDF</button>
+            <button type="button" class="btn" id="submitServerBtn" style="background:#059669;color:#fff;">✅ Submit to Dashboard</button>
+        </div>
+
+    </form>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"><div class="spinner"></div><span id="toastMsg">Generating PDF…</span></div>
+
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // ── File storage ──
+    const uploadedFiles = { pan: null, gst: null, incorp: null, msme: null };
+    const docLabels    = { pan: 'PAN Card', gst: 'GST Certificate', incorp: 'Certificate of Incorporation', msme: 'UDYAM Certificate' };
+
+    function handleFile(input, key) {
+        const file = input.files[0];
+        if (!file) return;
+        uploadedFiles[key] = file;
+
+        const card   = document.getElementById('card-' + key);
+        const status = document.getElementById('status-' + key);
+        const imgPrev= document.getElementById('preview-' + key);
+        const pdfPrev= document.getElementById('pdf-' + key);
+
+        card.classList.add('has-file');
+        status.textContent = `✓ ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+        imgPrev.classList.remove('show');
+        pdfPrev.classList.remove('show');
+
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = e => { imgPrev.src = e.target.result; imgPrev.classList.add('show'); };
+            reader.readAsDataURL(file);
+        } else if (file.type === 'application/pdf') {
+            pdfPrev.classList.add('show');
+        }
+    }
+
+    function removeDoc(key) {
+        uploadedFiles[key] = null;
+        const card   = document.getElementById('card-' + key);
+        const status = document.getElementById('status-' + key);
+        const imgPrev= document.getElementById('preview-' + key);
+        const pdfPrev= document.getElementById('pdf-' + key);
+        const input  = document.getElementById('file' + key.charAt(0).toUpperCase() + key.slice(1));
+        card.classList.remove('has-file');
+        status.textContent = 'No file chosen';
+        imgPrev.classList.remove('show'); imgPrev.src = '';
+        pdfPrev.classList.remove('show');
+        input.value = '';
+    }
+
+    // ── Copy general to billing ──
+    document.getElementById('copyGeneralToBilling').addEventListener('change', function() {
+        const f = document.getElementById('customerForm');
+        if (this.checked) {
+            f.billingName.value    = f.name.value;
+            f.billingAddress.value = f.address.value;
+            f.billingCity.value    = f.city.value;
+            f.billingPincode.value = f.pincode.value;
+            f.billingState.value   = f.state.value;
+        }
+    });
+
+// ── Copy general to Shipping ──
+    document.getElementById('copyGeneralToShipping').addEventListener('change', function() {
+        const f = document.getElementById('customerForm');
+        if (this.checked) {
+            f.shippingName.value    = f.name.value;
+            f.shippingAddress.value = f.address.value;
+            f.shippingCity.value    = f.city.value;
+            f.shippingPincode.value = f.pincode.value;
+            f.shippingState.value   = f.state.value;
+        }
+    });
+    // ── Save Draft ──
+    document.getElementById('saveBtn').addEventListener('click', () => {
+        const fd = new FormData(document.getElementById('customerForm'));
+        const data = Object.fromEntries(fd.entries());
+        localStorage.setItem('vendorDraft', JSON.stringify(data));
+        showToast('Draft saved!', 1500, false);
+    });
+
+    // ── Toast ──
+    function showToast(msg, duration, spinner) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.querySelector('.spinner').style.display = spinner ? 'block' : 'none';
+        t.classList.add('show');
+        if (duration) setTimeout(() => t.classList.remove('show'), duration);
+    }
+    function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+    // ─────────────────────────────────────────────
+    // PDF Generation — form pages + attached docs
+    // ─────────────────────────────────────────────
+    document.getElementById('submitPrintBtn').addEventListener('click', async function() {
+        const form = document.getElementById('customerForm');
+
+        // Basic validation
+        const required = form.querySelectorAll('[required]');
+        let valid = true;
+        required.forEach(el => { if (!el.value.trim()) { el.style.borderColor='var(--danger)'; valid=false; } else { el.style.borderColor=''; } });
+        if (!valid) { alert('Please fill in all required fields.'); return; }
+
+        showToast('Building PDF…', 0, true);
+
+        try {
+            // Step 1: Capture form as image via html2canvas (inside html2pdf)
+            document.getElementById('formButtons').style.display = 'none';
+
+            const formBlob = await new Promise((resolve) => {
+                const opt = {
+                    margin: 8,
+                    filename: '_tmp',
+                    image: { type: 'jpeg', quality: 0.95 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(document.getElementById('form-container')).outputPdf('blob').then(resolve);
+            });
+
+            document.getElementById('formButtons').style.display = 'flex';
+
+            // Step 2: Load the form PDF bytes
+            const { jsPDF } = window.jspdf;
+            const formPdfBytes = await formBlob.arrayBuffer();
+            const formPdfDoc   = await pdfjsLib.getDocument({ data: formPdfBytes }).promise;
+
+            // Step 3: Create final jsPDF doc, render form pages into it
+            const finalPdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+            const A4_W = 210, A4_H = 297;
+
+            for (let p = 1; p <= formPdfDoc.numPages; p++) {
+                if (p > 1) finalPdf.addPage();
+                const page = await formPdfDoc.getPage(p);
+                const vp   = page.getViewport({ scale: 2 });
+                const canvas = document.createElement('canvas');
+                canvas.width  = vp.width;
+                canvas.height = vp.height;
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                finalPdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, A4_W, A4_H);
+            }
+
+            // Step 4: Append uploaded documents
+            const keys = ['pan','gst','incorp','msme'];
+            for (const key of keys) {
+                const file = uploadedFiles[key];
+                if (!file) continue;
+
+                showToast(`Attaching ${docLabels[key]}…`, 0, true);
+
+                if (file.type === 'application/pdf') {
+                    // Render each page of the PDF
+                    const bytes   = await file.arrayBuffer();
+                    const pdfDoc2 = await pdfjsLib.getDocument({ data: bytes }).promise;
+
+                    // Add a divider/label page
+                    finalPdf.addPage();
+                    finalPdf.setFillColor(30, 58, 95);
+                    finalPdf.rect(0, 0, A4_W, A4_H, 'F');
+                    finalPdf.setFont('helvetica','bold');
+                    finalPdf.setTextColor(255,255,255);
+                    finalPdf.setFontSize(22);
+                    finalPdf.text(docLabels[key], A4_W/2, A4_H/2 - 10, { align:'center' });
+                    finalPdf.setFontSize(11);
+                    finalPdf.setTextColor(147, 197, 253);
+                    finalPdf.text(`Attached Document — ${file.name}`, A4_W/2, A4_H/2 + 8, { align:'center' });
+
+                    for (let p = 1; p <= pdfDoc2.numPages; p++) {
+                        finalPdf.addPage();
+                        const page = await pdfDoc2.getPage(p);
+                        const vp   = page.getViewport({ scale: 2 });
+                        const canvas = document.createElement('canvas');
+                        canvas.width  = vp.width;
+                        canvas.height = vp.height;
+                        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                        finalPdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, A4_W, A4_H);
+                    }
+
+                } else {
+                    // Image file
+                    const dataUrl = await new Promise(res => {
+                        const reader = new FileReader();
+                        reader.onload = e => res(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+
+                    // Create a temp image to get dimensions
+                    const img = await new Promise(res => {
+                        const i = new Image();
+                        i.onload = () => res(i);
+                        i.src = dataUrl;
+                    });
+
+                    // Divider page
+                    finalPdf.addPage();
+                    finalPdf.setFillColor(30, 58, 95);
+                    finalPdf.rect(0, 0, A4_W, A4_H, 'F');
+                    finalPdf.setFont('helvetica','bold');
+                    finalPdf.setTextColor(255,255,255);
+                    finalPdf.setFontSize(22);
+                    finalPdf.text(docLabels[key], A4_W/2, A4_H/2 - 10, { align:'center' });
+                    finalPdf.setFontSize(11);
+                    finalPdf.setTextColor(147, 197, 253);
+                    finalPdf.text(`Attached Document — ${file.name}`, A4_W/2, A4_H/2 + 8, { align:'center' });
+
+                    // Image page — fit to A4 with margins
+                    finalPdf.addPage();
+                    const margin = 10;
+                    const maxW = A4_W - margin*2;
+                    const maxH = A4_H - margin*2;
+                    const ratio = Math.min(maxW/img.width, maxH/img.height);
+                    const w = img.width * ratio;
+                    const h = img.height * ratio;
+                    const x = (A4_W - w) / 2;
+                    const y = (A4_H - h) / 2;
+                    const fmt = file.type === 'image/png' ? 'PNG' : 'JPEG';
+                    finalPdf.addImage(dataUrl, fmt, x, y, w, h);
+                }
+            }
+
+            // Step 5: Save
+            const companyName = document.getElementById('customerForm').name.value || 'Customer';
+            finalPdf.save(`Registration_${companyName.replace(/\s+/g,'_')}.pdf`);
+
+            hideToast();
+            showToast('✓ PDF generated successfully!', 3000, false);
+
+        } catch (err) {
+            document.getElementById('formButtons').style.display = 'flex';
+            hideToast();
+            console.error(err);
+            alert('Error generating PDF: ' + err.message);
+        }
+    });
+
+    // ── Submit to Server ──
+    document.getElementById('submitServerBtn').addEventListener('click', async () => {
+        const form = document.getElementById('customerForm');
+        const required = form.querySelectorAll('[required]');
+        let valid = true;
+        required.forEach(el => {
+            if (!el.value.trim()) { el.style.borderColor='var(--danger)'; valid=false; }
+            else el.style.borderColor='';
+        });
+        if (!valid) { alert('Please fill in all required fields.'); return; }
+
+        showToast('Submitting…', 0, true);
+        const fd = new FormData(form);
+        if (uploadedFiles.pan)    fd.append('doc_pan',    uploadedFiles.pan);
+        if (uploadedFiles.gst)    fd.append('doc_gst',    uploadedFiles.gst);
+        if (uploadedFiles.incorp) fd.append('doc_incorp', uploadedFiles.incorp);
+        if (uploadedFiles.msme)   fd.append('doc_msme',   uploadedFiles.msme);
+        if (uploadedFiles.Cheque) fd.append('doc_cheque', uploadedFiles.Cheque);
+
+        try {
+            const res  = await fetch('/submit', { method: 'POST', body: fd });
+            const data = await res.json();
+            hideToast();
+            if (data.success) {
+                showToast('✓ Submitted! ID: ' + data.id, 4000, false);
+                localStorage.removeItem('vendorDraft');
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch(e) {
+            hideToast();
+            alert('Could not reach server: ' + e.message);
+        }
+    });
+
+    // Restore draft on load
+    window.addEventListener('load', () => {
+        const saved = localStorage.getItem('vendorDraft');
+        if (!saved) return;
+        try {
+            const data = JSON.parse(saved);
+            const form = document.getElementById('customerForm');
+            Object.entries(data).forEach(([k,v]) => { if (form[k]) form[k].value = v; });
+        } catch(e) {}
+    });
+</script>
+</body>
+</html>
