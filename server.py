@@ -17,7 +17,7 @@ import os, base64, requests
 #  SETTINGS
 # ════════════════════════════════════════════
 DASHBOARD_PASSWORD = "admin123"         # ← change this!
-APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbwj0WUX6ZYK3C1lzT3Gn2B3G8eJ9RbKuaHA7lJqhskkmmkyhxXp_fxQdRUa3rlKPoLu/exec"  # ← paste your Apps Script URL here
+APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbw833D4MJWfuskA8e7mmFnINyo6UKiromoLsM0tZPkaHyx4HwqmXtGUlkUGgIvxfAk/exec"  # ← paste your Apps Script URL here
 PORT = 5000
 # ════════════════════════════════════════════
 
